@@ -33,7 +33,7 @@ public class IssueTicketActivity extends AppCompatActivity {
     DatabaseReference databaseSource;
     SharedPreferences shared;
     Spinner src,dest;
-    EditText tickets;
+    EditText tickets,childs;
     Button btnSubmit;
     String path;
     HashMap<String, Integer> hash_table = new HashMap<>();
@@ -98,7 +98,7 @@ public class IssueTicketActivity extends AppCompatActivity {
         tickets = (EditText) findViewById(R.id.no_of_tickets);
         btnSubmit = (Button) findViewById(R.id.btn_Issue);
         databaseSource = FirebaseDatabase.getInstance().getReference("City");
-
+        childs = (EditText) findViewById(R.id.no_childs);
 
         btnSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,16 +109,21 @@ public class IssueTicketActivity extends AppCompatActivity {
                     String source = src.getSelectedItem().toString();
                     String destination = dest.getSelectedItem().toString();
                     int no_of_tickets = Integer.parseInt(tickets.getText().toString());
+                    int no_of_childs = Integer.parseInt(childs.getText().toString());
 
-                    if (no_of_tickets > 0 && no_of_tickets <= 10 && !TextUtils.equals(source, destination)) {
+                    if (no_of_tickets > 0 && no_of_tickets <= 10 && no_of_childs>0 && no_of_childs<=10 && !TextUtils.equals(source, destination)) {
                         Intent i = new Intent(IssueTicketActivity.this, TicketConfirmation.class);
                         SharedPreferences.Editor editor = shared.edit();
                         editor.putInt("no_of_tickets", no_of_tickets);
+                        editor.putInt("no_of_childs", no_of_childs);
+
                         editor.putString("src_ticket", source);
                         editor.putString("dest_ticket", destination);
                         editor.putInt("src_key_ticket", hash_table.get(source));
                         editor.putInt("dest_key_ticket", hash_table.get(destination));
-
+//                        int t = shared.getInt("Total_tickets",0);
+//                        t = t + no_of_tickets;
+//                        editor.putInt("Total_tickets",t);
                         editor.commit();
                         startActivity(i);
                         return;

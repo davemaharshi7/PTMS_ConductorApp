@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -34,6 +35,8 @@ public class RouteSelector extends AppCompatActivity {
     DatabaseReference databaseRoute,databaseCity;
     FirebaseAuth mAuth;
     HashMap<Integer, String> hash_table_route = new HashMap<>();
+    HashMap<String, Integer> hash_table_route_key = new HashMap<>();
+
     List<String> cities = new ArrayList<String>();
 
 
@@ -52,7 +55,7 @@ public class RouteSelector extends AppCompatActivity {
                     String city_name = areaSnapshot.child("City_Name").getValue(String.class);
 //                    Log.i("KEEEEYYY:",city_key);
                     hash_table_route.put(Integer.parseInt(city_key),city_name);
-
+                    hash_table_route_key.put(city_name,Integer.parseInt(city_key));
                     cities.add(city_name);
                 }
 
@@ -83,10 +86,10 @@ public class RouteSelector extends AppCompatActivity {
                     int len = arr.length;
                     if((Integer.parseInt(arr[0]) == shared.getInt("source_key",0) && (Integer.parseInt(arr[len-1]) == shared.getInt("destination_key",0))))
                     {
-                        //requiredPath are paths in number format
+                        //requiredPaths are paths in number format
                         requiredPaths.add(paths.get(j));
                         StringBuilder s1 = new StringBuilder();
-
+//                        s1.append("-");
                         for(int i=0;i<len;i++)
                         {
                             s1.append(hash_table_route.get(Integer.parseInt(arr[i]))+"-");
@@ -96,7 +99,11 @@ public class RouteSelector extends AppCompatActivity {
 
                     }
                 }
-
+//                for(int i = 0;i < requiredPaths.size();i++ )
+//                {
+//                    Log.d("DDD",requiredPaths.get(i));
+//
+//                }
 
                 ArrayAdapter<String> areasAdapter = new ArrayAdapter<String>(RouteSelector.this, android.R.layout.simple_spinner_item, requiredNamePaths);
                 areasAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -128,7 +135,7 @@ public class RouteSelector extends AppCompatActivity {
         submit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String selectedRoutePath = route.getSelectedItem().toString();
+                final String selectedRoutePath = route.getSelectedItem().toString();
                 if (selectedRoutePath == null)
                 {
                     printMessage("Sorry No Route Available");
@@ -136,8 +143,36 @@ public class RouteSelector extends AppCompatActivity {
                 else {
                     SharedPreferences.Editor editor = shared.edit();
                     editor.putString("selectedPath", selectedRoutePath);
+//                    editor.putInt("Total_tickets", 0);
+//                    editor.putInt("Total_Fare",0);
+
                     editor.commit();
-                    Intent i = new Intent(RouteSelector.this, IssueTicketActivity.class);
+                    final String routeInNumbers = getWholeRouteInNumbers(selectedRoutePath);
+                    System.out.print(routeInNumbers);
+                    databaseRoute.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            for (DataSnapshot areaSnapshot: dataSnapshot.getChildren()) {
+                                String Path = areaSnapshot.child("Path").getValue(String.class);
+
+                                if(TextUtils.equals(Path,routeInNumbers))
+                                {
+                                    SharedPreferences.Editor editor1 = shared.edit();
+                                    String kk = areaSnapshot.getKey();
+                                    editor1.putString("selectedPathRouteId",kk);
+                                    editor1.commit();
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+//                    editor.putInt("selectedPathRouteId",hash_table_route_key.get(selectedRoutePath));
+                    editor.commit();
+                    Intent i = new Intent(RouteSelector.this, StartTripActivity.class);
 //                i.putExtra("selectedRoute",selectedRoutePath);
                     startActivity(i);
                     finish(); //Added to make robust situation => as conductor cannot issue different tickets on single Login
@@ -148,6 +183,24 @@ public class RouteSelector extends AppCompatActivity {
         });
 
      }
+
+    private String getWholeRouteInNumbers(String selectedRoutePath) {
+        String[] arr = selectedRoutePath.split("-");
+        String sbf = "";
+
+        for (int i =0;i<arr.length;i++)
+        {
+
+            sbf += hash_table_route_key.get(arr[i]).toString();
+            if(i != arr.length-1)
+            {
+                sbf+="#";
+            }
+        }
+        String routeInNumbers = sbf.toString();
+        Log.d("DDD",routeInNumbers);
+        return routeInNumbers;
+    }
 
     private void printMessage(String path) {
         Toast.makeText(getApplicationContext(),path,Toast.LENGTH_SHORT).show();

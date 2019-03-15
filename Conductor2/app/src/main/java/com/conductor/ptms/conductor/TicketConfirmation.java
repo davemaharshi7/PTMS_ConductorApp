@@ -28,6 +28,8 @@ import java.util.Date;
 
 public class TicketConfirmation extends AppCompatActivity {
 
+    private static final int PRICE_PER_KM = 3;
+    private static final int PRICE_PER_KM_CHILD = PRICE_PER_KM/2;
     TextView busid,routeid,srcc,dest,cid,no_tickets,fare;
     Button confirm;
     String src_key,dest_key;
@@ -35,7 +37,7 @@ public class TicketConfirmation extends AppCompatActivity {
     String dist,source,destination;
     FirebaseAuth mAuth;
     public int final_fare;
-    int no_tickets_str;
+    int no_tickets_str,no_childs;
     TicketLog ticketLog;
     DatabaseReference databaseTicket;
     DatabaseReference databaseFare;
@@ -50,7 +52,8 @@ public class TicketConfirmation extends AppCompatActivity {
 //                Log.d("DISTANCE::",dist);
 
 //                dist = dataSnapshot.child(Integer.toString(dest_key)).getValue(String.class);
-                final_fare = Integer.parseInt(dist)*3*no_tickets_str;
+                final_fare = Integer.parseInt(dist)*PRICE_PER_KM*no_tickets_str;
+                final_fare += Integer.parseInt(dist)*PRICE_PER_KM_CHILD*no_childs;
 //                Log.d("DISTANCE _FARE",""+final_fare);
                 fare.setText(" "+final_fare);
                 ticketLog = new TicketLog(source,destination,formatedDate,""+no_tickets_str,""+final_fare);
@@ -70,6 +73,7 @@ public class TicketConfirmation extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ticket_confirmation);
 
+        mAuth = FirebaseAuth.getInstance();
         //Initialization And Setting Shared variable
         shared = getSharedPreferences("Bus_Data", Context.MODE_PRIVATE);
         busid = (TextView) findViewById(R.id.Bus_id);
@@ -88,6 +92,7 @@ public class TicketConfirmation extends AppCompatActivity {
         source = shared.getString("src_ticket","ERROR");
         destination = shared.getString("dest_ticket","ERROR");
         no_tickets_str = shared.getInt("no_of_tickets",0);
+        no_childs = shared.getInt("no_of_childs",0);
         final String conductor_id = shared.getString("conductor_id","ERROR");
         cid.setText(conductor_id);
 
@@ -117,13 +122,27 @@ public class TicketConfirmation extends AppCompatActivity {
         confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                SharedPreferences.Editor editor = shared.edit();
+//                editor.putInt("Total_tickets",no_tickets_str);
+                int t = shared.getInt("Total_tickets",0);
+                t = t + no_tickets_str + no_childs;
+                editor.putInt("Total_tickets",t);
+                int f = shared.getInt("Total_Fare",0);
+                f = f + final_fare;
+                editor.putInt("final_fare",f);
+                editor.commit();
                 addTicketToDatabase(bus_id, conductor_id, ticketLog);
+                Intent i = new Intent(TicketConfirmation.this,LogoutAndAgainIssueActivity.class);
+                startActivity(i);
+                return;
+
             }
         });
     }
 
     private void addTicketToDatabase(String bus_id,String conductor_id,TicketLog t) {
-        databaseTicket.child(bus_id).child(conductor_id).child("3").setValue(t);
+        String key = databaseTicket.push().getKey();
+        databaseTicket.child(bus_id).child(conductor_id).child(key).setValue(t);
         printMessage("Ticket Logged Successfully");
 
     }
