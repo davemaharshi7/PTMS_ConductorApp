@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,12 +27,25 @@ public class QrCodeScanner extends AppCompatActivity implements View.OnClickList
     private IntentIntegrator qrScan;
     SharedPreferences shared;
     private FirebaseAuth mAuth;
+    private String prevBusID;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qr_code_scanner);
+        shared = getSharedPreferences("Bus_Data",Context.MODE_PRIVATE); // get the set of Preferences labeled "A"
+        String BUSID = shared.getString("bus_id","NOT");
+        Log.i("FIRST",BUSID);
+//        if(!BUSID.equals("NOT"))
+//        {
+//            Log.i("FIRST",BUSID+" INSIDE");
+//
+//            Intent i = new Intent(getApplicationContext(), SrcDestinationActivity.class);
+//            startActivity(i);
+//            finish();
+//        }
+
 
         mAuth = FirebaseAuth.getInstance();
         buttonScan = (Button) findViewById(R.id.qrScanner);
@@ -42,7 +56,6 @@ public class QrCodeScanner extends AppCompatActivity implements View.OnClickList
         qrScan = new IntentIntegrator(this);
         buttonScan.setOnClickListener(this);
 
-        shared = getSharedPreferences("Bus_Data",Context.MODE_PRIVATE); // get the set of Preferences labeled "A"
 
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,7 +86,7 @@ public class QrCodeScanner extends AppCompatActivity implements View.OnClickList
                     SharedPreferences.Editor editor = shared.edit();
                     editor.putString("bus_id",obj.getString("busid"));
                     editor.commit();
-
+                    prevBusID = obj.getString("busid");
                     textData.setText(obj.getString("busid"));
                     btnNext.setVisibility(View.VISIBLE);
                 } catch (JSONException e) {
@@ -89,6 +102,20 @@ public class QrCodeScanner extends AppCompatActivity implements View.OnClickList
             super.onActivityResult(requestCode, resultCode, data);
         }
     }
+//    @Override
+//    public void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        outState.putString("bus_id", prevBusID);
+//    }
+//
+//    @Override
+//    public void onRestoreInstanceState(Bundle savedInstanceState) {
+//        super.onSaveInstanceState(savedInstanceState);
+//        String bus_id = savedInstanceState.getString("bus_id");
+//        Intent i = new Intent(getApplicationContext(), SrcDestinationActivity.class);
+//        startActivity(i);
+//        finish();
+//    }
 
     @Override
     public void onClick(View v) {
@@ -111,7 +138,10 @@ public class QrCodeScanner extends AppCompatActivity implements View.OnClickList
                 break;
             case R.id.help_menu:
                 Toast.makeText(this, "HELP clicked", Toast.LENGTH_SHORT).show();
-
+                break;
+            case R.id.stop_trip:
+                Intent i = new Intent(getApplicationContext(),StopTripActivity.class);
+                startActivity(i);
                 break;
         }
 

@@ -49,7 +49,15 @@
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".LogoutAndAgainIssueActivity"></activity>
+        <activity android:name=".LogoutAndAgainIssueActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".StopTripActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".CardPassOptionActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".scanCardActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".cardPinActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".CashPaymentActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".ScanPassActivity" android:screenOrientation="portrait"/>
+        <activity android:name=".VerifySrcDestOfPassActivity"
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>

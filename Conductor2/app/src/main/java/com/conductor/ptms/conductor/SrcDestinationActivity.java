@@ -149,6 +149,10 @@ public class SrcDestinationActivity extends AppCompatActivity {
                 Toast.makeText(this, "HELP clicked", Toast.LENGTH_SHORT).show();
 
                 break;
+            case R.id.stop_trip:
+                Intent i = new Intent(getApplicationContext(),StopTripActivity.class);
+                startActivity(i);
+                break;
         }
 
         return true;

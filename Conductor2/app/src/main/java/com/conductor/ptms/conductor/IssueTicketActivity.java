@@ -103,15 +103,33 @@ public class IssueTicketActivity extends AppCompatActivity {
         btnSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (TextUtils.isEmpty(tickets.getText())) {
-                    printMessage("Please enter Number of tickets");
-                } else {
+
                     String source = src.getSelectedItem().toString();
                     String destination = dest.getSelectedItem().toString();
-                    int no_of_tickets = Integer.parseInt(tickets.getText().toString());
-                    int no_of_childs = Integer.parseInt(childs.getText().toString());
+                    int no_of_tickets;
+                    int no_of_childs;
 
-                    if (no_of_tickets > 0 && no_of_tickets <= 10 && no_of_childs>0 && no_of_childs<=10 && !TextUtils.equals(source, destination)) {
+                    if(tickets.getText().toString().isEmpty())
+                    {
+                        tickets.setError("Please Enter Number of Tickets");
+                        tickets.requestFocus();
+                        return;
+                    }
+                    else {
+                        no_of_tickets = Integer.parseInt(tickets.getText().toString());
+                    }
+                    if(childs.getText().toString().isEmpty())
+                    {
+//
+                        childs.setError("Please Enter number of Child");
+                        childs.requestFocus();
+                        return;
+                    }else {
+                       no_of_childs = Integer.parseInt(childs.getText().toString());
+                    }
+
+                    if (no_of_tickets > 0 && no_of_tickets <= 10 && no_of_childs>=0 &&
+                            no_of_childs<=10 && !TextUtils.equals(source, destination)) {
                         Intent i = new Intent(IssueTicketActivity.this, TicketConfirmation.class);
                         SharedPreferences.Editor editor = shared.edit();
                         editor.putInt("no_of_tickets", no_of_tickets);
@@ -127,11 +145,12 @@ public class IssueTicketActivity extends AppCompatActivity {
                         editor.commit();
                         startActivity(i);
                         return;
-                    } else
-                        printMessage("Please Enter Number of tickets ");
-
+                    } else {
+                        printMessage("Please check Entered Details such as source and destination" +
+                                " and number of tickets");
+                    }
                 }
-            }
+
 
         });
 
@@ -159,6 +178,10 @@ public class IssueTicketActivity extends AppCompatActivity {
             case R.id.help_menu:
                 Toast.makeText(this, "HELP clicked", Toast.LENGTH_SHORT).show();
 
+                break;
+            case R.id.stop_trip:
+                Intent i = new Intent(getApplicationContext(),StopTripActivity.class);
+                startActivity(i);
                 break;
         }
 

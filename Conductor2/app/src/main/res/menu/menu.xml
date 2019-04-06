@@ -8,4 +8,7 @@
     <item
         android:id="@+id/help_menu"
         android:title="Help" />
+    <item
+        android:id="@+id/stop_trip"
+        android:title="Complete Trip" />
 </menu>

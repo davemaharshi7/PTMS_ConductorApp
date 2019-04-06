@@ -29,7 +29,7 @@ public class StartTripActivity extends AppCompatActivity {
 
     LocationManager locationManager;
     LocationListener locationListener;
-    DatabaseReference databaseRouteBus;
+    DatabaseReference databaseRouteBus,databaseFarecollected;
     SharedPreferences shared;
     private Button start;
 
@@ -39,6 +39,9 @@ public class StartTripActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start_trip);
         databaseRouteBus = FirebaseDatabase.getInstance().getReference().child("Bus_Route_time");
+        databaseFarecollected = FirebaseDatabase.getInstance().getReference().child
+                ("Fare_Collected_Status");
+
         start = (Button) findViewById(R.id.StartTripButton);
         checkLocationPermission();
         start.setOnClickListener(new View.OnClickListener() {
@@ -47,22 +50,55 @@ public class StartTripActivity extends AppCompatActivity {
                 Intent i = new Intent(StartTripActivity.this,LocationService.class);
                 startService(i);
                 shared = getSharedPreferences("Bus_Data", Context.MODE_PRIVATE);
+                //String key = databaseFarecollected.push().getKey();
+                String bus_id = shared.getString("bus_id","0");
+                String route_id = shared.getString("selectedPathRouteId","0");
+                String cid = shared.getString("conductor_id","ERROR");
+                String formatedDate,formatedDateTime;
+                Date c = Calendar.getInstance().getTime();
+                SimpleDateFormat frmt = new SimpleDateFormat("HH:mm");
+                formatedDateTime = frmt.format(c);
+
+                SimpleDateFormat Datefrmt = new SimpleDateFormat("yyyy-MM-dd");
+                formatedDate = Datefrmt.format(c);
+                //TODO:GENERATE KEY ID
+
+                String key = bus_id +"_"+cid+"_"+formatedDate;
+
                 SharedPreferences.Editor editor = shared.edit();
 //                editor.putString("selectedPath", selectedRoutePath);
                 editor.putInt("Total_tickets", 0);
                 editor.putInt("Total_Fare",0);
-
+                editor.putString("FareCollectedKey",key);
                 editor.commit();
-                String bus_id = shared.getString("bus_id","0");
-                String route_id = shared.getString("selectedPathRouteId","0");
-                String formatedDate;
-                Date c = Calendar.getInstance().getTime();
-                SimpleDateFormat frmt = new SimpleDateFormat("HH:mm");
-                formatedDate = frmt.format(c);
+
+
+
+
+
+                String NOT_COLLECTED = "0";
                 //TODO: create class for bus_route_time table
-                BusRouteTime busRouteTime = new BusRouteTime(bus_id,formatedDate,route_id);
-                databaseRouteBus.child(bus_id).setValue(busRouteTime);
+//                BusRouteTime busRouteTime = new BusRouteTime(bus_id,formatedDate,route_id);
+//                databaseRouteBus.child(bus_id).setValue(busRouteTime);
+                databaseRouteBus.child(bus_id).child("Bus_ID").setValue(bus_id);
+                databaseRouteBus.child(bus_id).child("Departure_time").setValue(formatedDateTime);
+                databaseRouteBus.child(bus_id).child("Route_ID").setValue(route_id);
+
+
+
+                int final_fare = 0;
+
+                databaseFarecollected.child(key).child("Bus_ID").setValue(bus_id);
+                databaseFarecollected.child(key).child("C_ID").setValue(cid);
+                databaseFarecollected.child(key).child("Date").setValue(formatedDate);
+                databaseFarecollected.child(key).child("Is_Collected").setValue(NOT_COLLECTED);
+                databaseFarecollected.child(key).child("totalFare").setValue(final_fare);
+
+
+
                 Toast.makeText(getApplicationContext(),"Bus entry successfull",Toast.LENGTH_SHORT).show();
+
+                //TODO:HERE WE WILL EDIT AFTER JURY DECISION
                 Intent intent = new Intent(StartTripActivity.this,IssueTicketActivity.class);
                 startActivity(intent);
                 return;

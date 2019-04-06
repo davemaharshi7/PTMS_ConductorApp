@@ -29,6 +29,7 @@ public class LogoutAndAgainIssueActivity extends AppCompatActivity {
     DatabaseReference databaseHistory,databaseFareCollected;
     SharedPreferences shared;
     int final_fare,total_tickets;
+    Button stopTrip;
     String formatedDate,bus_id,route_id,source,destination,cid,status;
 
     @Override
@@ -65,6 +66,7 @@ public class LogoutAndAgainIssueActivity extends AppCompatActivity {
         databaseFareCollected = FirebaseDatabase.getInstance().getReference().child("Fare_Collected_Status");
 
         //getting details
+        stopTrip = findViewById(R.id.stopTripFinalButton);
         shared = getSharedPreferences("Bus_Data", Context.MODE_PRIVATE);
         Date c = Calendar.getInstance().getTime();
         SimpleDateFormat frmt = new SimpleDateFormat("yyyy-MM-dd");
@@ -77,7 +79,13 @@ public class LogoutAndAgainIssueActivity extends AppCompatActivity {
         total_tickets = shared.getInt("Total_tickets",0);
         final_fare = shared.getInt("final_fare",0);
 
-
+        stopTrip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(getApplicationContext(),StopTripActivity.class);
+                startActivity(i);
+            }
+        });
         logout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,6 +103,8 @@ public class LogoutAndAgainIssueActivity extends AppCompatActivity {
         issueAnother.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                //TODO: HERE WE WILL EDIT AFTER JURY DESICION
                 Intent intent = new Intent(LogoutAndAgainIssueActivity.this,IssueTicketActivity.class);
                 startActivity(intent);
                 return;

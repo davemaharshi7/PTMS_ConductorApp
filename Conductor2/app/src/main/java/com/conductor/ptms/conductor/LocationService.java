@@ -17,14 +17,18 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class LocationService extends Service {
 
 
     public LocationService() {
     }
+
 
     private static final String TAG = "BOOMBOOMTESTGPS";
     private LocationManager mLocationManager = null;
@@ -37,8 +41,10 @@ public class LocationService extends Service {
         Location mLastLocation;
         LocationManager locationManager;
         LocationListener locationListener;
+        String inputLongitude, inputLatitude;
         DatabaseReference databaseLocation = FirebaseDatabase.getInstance().getReference().child("Location");
-
+        DatabaseReference databaseCity = FirebaseDatabase.getInstance().getReference().child
+                ("City");
         public LocationListener(String provider) {
             Log.e(TAG, "LocationListener " + provider);
             mLastLocation = new Location(provider);
@@ -49,10 +55,60 @@ public class LocationService extends Service {
             Log.e(TAG, "onLocationChanged: " + location);
             mLastLocation.set(location);
             shared = getSharedPreferences("Bus_Data", Context.MODE_PRIVATE);
-            String bus_id = shared.getString("bus_id","Error");
+            final String bus_id = shared.getString("bus_id","Error");
 //            String id = "bus_102";
-            com.conductor.ptms.conductor.Location l = new com.conductor.ptms.conductor.Location(location.getLongitude(),location.getLatitude());
-                databaseLocation.child(bus_id).setValue(l);
+            final Double latitide = location.getLatitude();
+            final Double longitude = location.getLongitude();
+            com.conductor.ptms.conductor.Location l = new com.conductor.ptms.conductor.Location
+                    (longitude,latitide);
+            databaseLocation.child(bus_id).setValue(l);
+
+            //TODO : Reduce the Number of Iterations
+            databaseCity.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    for (DataSnapshot d : dataSnapshot.getChildren()) {
+                        inputLatitude = d.child("Latitude").getValue(String.class);
+                        inputLongitude= d.child("longitude").getValue(String.class);
+                        String cityName = d.child("City_Name").getValue(String.class);
+                        Log.d("CHECK",inputLatitude +" "+inputLongitude+" "+ cityName);
+                        Double lati = Double.parseDouble(inputLatitude)*100.0;
+                        Double longi = Double.parseDouble(inputLongitude)*100.0;
+//                        Double
+                        int a,b;
+                        Log.d("CHECK" , "VALUES1"+inputLatitude+" "+latitide);
+                        Log.d("CHECK" , "VALUES2"+inputLongitude+" "+longitude);
+
+                        if(lati - latitide*100 > 0)
+                        {
+                            a = (int)(lati - latitide*100);
+                        }
+                        else {
+                            a = (int)(latitide*100 - lati);
+
+                        }
+                        if(longi - longitude*100 > 0){
+                            b = (int)(longi - longitude*100);
+                        }
+                        else {
+                            b = (int)(longitude*100 - longi);
+
+                        }
+//                        int a = (int)(lati*100.0 - latitide*100.0);
+//                        int b = (int)(longi*100.0 - longitude*100.0);
+                        Log.d("CHECK FINAL",a+" "+b);
+                        if(a <= 2 && b <= 2 ){
+                            databaseLocation.child(bus_id).child("lastVisitedCity").setValue
+                                    (cityName);
+                    }
+                }
+            }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
         }
 
         @Override

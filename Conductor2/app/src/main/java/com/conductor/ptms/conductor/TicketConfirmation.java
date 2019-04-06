@@ -56,8 +56,12 @@ public class TicketConfirmation extends AppCompatActivity {
                 final_fare += Integer.parseInt(dist)*PRICE_PER_KM_CHILD*no_childs;
 //                Log.d("DISTANCE _FARE",""+final_fare);
                 fare.setText(" "+final_fare);
-                ticketLog = new TicketLog(source,destination,formatedDate,""+no_tickets_str,""+final_fare);
-
+//                ticketLog = new TicketLog(source,destination,formatedDate,""+(no_tickets_str+no_childs),
+//                        ""+final_fare);
+                shared = getSharedPreferences("Bus_Data", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = shared.edit();
+                editor.putInt("Ticket_FARE",final_fare);
+                editor.commit();
                 confirm.setVisibility(View.VISIBLE);
             }
             @Override
@@ -109,30 +113,35 @@ public class TicketConfirmation extends AppCompatActivity {
         routeid.setText(route_id);
         srcc.setText(source);
         dest.setText(destination);
-        no_tickets.setText(Integer.toString(no_tickets_str));
 
+        //TODO:MADE CHANGES
+        int totalNumberOfIssued = no_tickets_str+no_childs;
+        no_tickets.setText(Integer.toString(totalNumberOfIssued));
+        SharedPreferences.Editor editor = shared.edit();
+        editor.putInt("totalNumberOfIssued",totalNumberOfIssued);
+        editor.commit();
         //getting current date to string
         Date c = Calendar.getInstance().getTime();
         SimpleDateFormat frmt = new SimpleDateFormat("yyyy-MM-dd");
         formatedDate = frmt.format(c);
 
 
-        ticketLog = new TicketLog(source,destination,formatedDate,""+no_tickets_str,""+final_fare);
+//        ticketLog = new TicketLog(source,destination,formatedDate,""+totalNumberOfIssued,""+final_fare);
 
         confirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences.Editor editor = shared.edit();
-//                editor.putInt("Total_tickets",no_tickets_str);
-                int t = shared.getInt("Total_tickets",0);
-                t = t + no_tickets_str + no_childs;
-                editor.putInt("Total_tickets",t);
-                int f = shared.getInt("Total_Fare",0);
-                f = f + final_fare;
-                editor.putInt("final_fare",f);
-                editor.commit();
-                addTicketToDatabase(bus_id, conductor_id, ticketLog);
-                Intent i = new Intent(TicketConfirmation.this,LogoutAndAgainIssueActivity.class);
+//                SharedPreferences.Editor editor = shared.edit();
+////                editor.putInt("Total_tickets",no_tickets_str);
+//                int t = shared.getInt("Total_tickets",0);
+//                t = t + no_tickets_str + no_childs;
+//                editor.putInt("Total_tickets",t);
+//                int f = shared.getInt("Total_Fare",0);
+//                f = f + final_fare;
+//                editor.putInt("final_fare",f);
+//                editor.commit();
+//                //addTicketToDatabase(bus_id, conductor_id, ticketLog);
+                Intent i = new Intent(TicketConfirmation.this,scanCardActivity.class);
                 startActivity(i);
                 return;
 
@@ -140,12 +149,12 @@ public class TicketConfirmation extends AppCompatActivity {
         });
     }
 
-    private void addTicketToDatabase(String bus_id,String conductor_id,TicketLog t) {
-        String key = databaseTicket.push().getKey();
-        databaseTicket.child(bus_id).child(conductor_id).child(key).setValue(t);
-        printMessage("Ticket Logged Successfully");
-
-    }
+//    private void addTicketToDatabase(String bus_id,String conductor_id,TicketLog t) {
+//        String key = databaseTicket.push().getKey();
+//        databaseTicket.child(bus_id).child(conductor_id).child(key).setValue(t);
+//        printMessage("Ticket Logged Successfully");
+//
+//    }
 
     private void printMessage(String ticket_logged) {
         Toast.makeText(getApplicationContext(),ticket_logged,Toast.LENGTH_SHORT).show();
@@ -167,7 +176,10 @@ public class TicketConfirmation extends AppCompatActivity {
                 break;
             case R.id.help_menu:
                 Toast.makeText(this, "HELP clicked", Toast.LENGTH_SHORT).show();
-
+                break;
+            case R.id.stop_trip:
+                Intent i = new Intent(getApplicationContext(),StopTripActivity.class);
+                startActivity(i);
                 break;
         }
 
